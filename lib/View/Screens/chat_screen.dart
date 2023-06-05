@@ -2,8 +2,7 @@ import 'package:badges/badges.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:grouped_list/grouped_list.dart';
-import 'package:intl/intl.dart' as intl;
+import 'package:sticky_grouped_list/sticky_grouped_list.dart';
 import 'package:talk_app/Controller/chat_controller.dart';
 import 'package:talk_app/Model/Models/message.dart';
 import 'package:talk_app/View/Widgets/chat_bubble.dart';
@@ -26,18 +25,18 @@ class ChatScreen extends StatelessWidget {
               controller: controller.controller,
             ),
             Obx(() => Expanded(
-                  child: GroupedListView<Message, String>(
-                    groupBy: (message) =>
-                        intl.DateFormat.yMMMd().format(message.date),
-                    groupSeparatorBuilder: (date) => DateChip(
-                      date: intl.DateFormat.yMMMd().parseStrict(date),
-                      color: Colors.grey.shade400,
+                  child: StickyGroupedListView<Message, DateTime>(
+                    groupBy: (message) => DateTime(message.date.year,
+                        message.date.month, message.date.day),
+                    groupSeparatorBuilder: (message) => DateChip(
+                      date: message.date,
+                      color: const Color.fromARGB(190, 0, 170, 255),
                     ),
-                    useStickyGroupSeparators: true,
                     floatingHeader: true,
-                    controller: controller.scrollController,
+                    itemScrollController: controller.scrollController,
                     // ignore: invalid_use_of_protected_member
                     elements: controller.messages.value,
+                    itemPositionsListener: controller.itemPositionsListener,
                     itemBuilder: (context, message) {
                       return ChatBubble(
                         message: message,

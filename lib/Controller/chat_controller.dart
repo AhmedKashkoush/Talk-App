@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:sticky_grouped_list/sticky_grouped_list.dart';
 import 'package:talk_app/Core/Constants/links.dart';
 import 'package:talk_app/Core/Utils/Message/message_state.dart';
 import 'package:talk_app/Core/Utils/Message/message_types.dart';
@@ -12,7 +14,10 @@ class ChatController extends GetxController {
   final String email = Get.arguments['email'];
 
   final TextEditingController controller = TextEditingController();
-  final ScrollController scrollController = ScrollController();
+  final ItemPositionsListener itemPositionsListener =
+      ItemPositionsListener.create();
+  final GroupedItemScrollController scrollController =
+      GroupedItemScrollController();
 
   final RxInt _newMessages = 0.obs;
   RxInt get newMessages => _newMessages;
@@ -21,23 +26,48 @@ class ChatController extends GetxController {
   RxBool get show => _show;
 
   @override
+  void onReady() {
+    scrollController.jumpTo(index: messages.indexOf(messages.last));
+    super.onReady();
+  }
+
+  @override
   void onInit() {
     _initConnection();
-    scrollController.addListener(_showArrow);
+    final list = List.generate(
+        20,
+        (index) => Message(
+              id: '',
+              chatId: '',
+              from: email,
+              to: '',
+              text:
+                  'LOoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text',
+              type: MessageType.text,
+              date: DateTime.now(),
+              state: MessageState.read,
+            ));
+    messages.addAll(list);
+    itemPositionsListener.itemPositions.addListener(_showArrow);
     super.onInit();
   }
 
   @override
-  void dispose() {
+  void onClose() {
     controller.dispose();
+    si.socket?.emit('offline', {'email': email});
     si.disconnect();
-    super.dispose();
+    super.onClose();
   }
 
   void _showArrow() {
-    final double maxPosition = scrollController.position.maxScrollExtent + 200;
-    final double currentPosition = scrollController.position.pixels;
-    if (currentPosition < maxPosition - 500) {
+    // final double maxPosition = scrollController.position.maxScrollExtent;
+    // final double currentPosition = scrollController.position.pixels;
+    // debugPrint(
+    //     '${itemPositionsListener.itemPositions.value.last.index ~/ 2} ${messages.indexOf(messages.last)}');
+    // debugPrint('${itemPositionsListener.itemPositions.value.last.index}');
+    if (itemPositionsListener.itemPositions.value.last.index ~/ 2 <
+        messages.indexOf(messages.last)) {
       _show.value = true;
     } else {
       _show.value = false;
@@ -49,6 +79,7 @@ class ChatController extends GetxController {
     si = SocketInit(Links.base);
     si.socket?.connect();
     si.socket?.emit('connected', {'email': email});
+    si.socket?.emit('online', {'email': email});
     si.socket?.on('message', (data) {
       final Message message = Message(
         id: '',
@@ -61,10 +92,7 @@ class ChatController extends GetxController {
         state: MessageState.read,
       );
       messages.add(message);
-      final double maxPosition =
-          scrollController.position.maxScrollExtent + 200;
-      final double currentPosition = scrollController.position.pixels;
-      if (currentPosition < maxPosition - 500) {
+      if (_show.value) {
         _newMessages.value++;
         return;
       }
@@ -73,11 +101,10 @@ class ChatController extends GetxController {
   }
 
   void animateToLast() {
-    final double maxPosition = scrollController.position.maxScrollExtent + 200;
-    scrollController.animateTo(
-      maxPosition,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+    scrollController.scrollTo(
+      index: messages.indexOf(messages.last),
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
     );
   }
 
@@ -99,9 +126,6 @@ class ChatController extends GetxController {
       'text': text,
       'createdAt': message.date.toIso8601String()
     });
-    final double maxPosition = scrollController.position.maxScrollExtent + 200;
-    final double currentPosition = scrollController.position.pixels;
-    if (currentPosition < maxPosition - 500) return;
     animateToLast();
   }
 }
