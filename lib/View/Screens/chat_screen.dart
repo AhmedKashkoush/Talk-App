@@ -15,24 +15,64 @@ class ChatScreen extends StatelessWidget {
     return GetBuilder<ChatController>(builder: (controller) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Chat Screen'),
+          title: Material(
+            type: MaterialType.transparency,
+            child: ListTile(
+              title: Text(
+                controller.to,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Obx(
+                () => Text(
+                  controller.isTyping.value
+                      ? 'Typing...'
+                      : controller.isOnline.value
+                          ? 'Online'
+                          : 'Offline',
+                ),
+              ),
+              leading: const CircleAvatar(),
+            ),
+          ),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          iconTheme: const IconThemeData(color: Colors.blue),
+          titleSpacing: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.call),
+              onPressed: () {},
+            ),
+            IconButton(
+              icon: const Icon(Icons.videocam),
+              onPressed: () {},
+            ),
+            PopupMenuButton(itemBuilder: (context) {
+              return [];
+            }),
+          ],
         ),
         body: Column(
           children: [
-            Text('from:${controller.email}'),
-            TextField(
-              decoration: const InputDecoration(hintText: 'to'),
-              controller: controller.controller,
-            ),
+            // Text('from:${controller.email}'),
+            // TextField(
+            //   decoration: const InputDecoration(hintText: 'to'),
+            //   controller: controller.controller,
+            // ),
             Obx(() => Expanded(
                   child: StickyGroupedListView<Message, DateTime>(
+                    // padding: const EdgeInsets.only(top: 24),
                     groupBy: (message) => DateTime(message.date.year,
                         message.date.month, message.date.day),
-                    groupSeparatorBuilder: (message) => DateChip(
-                      date: message.date,
-                      color: const Color.fromARGB(190, 0, 170, 255),
+                    groupSeparatorBuilder: (message) => SizedBox(
+                      height: 60,
+                      child: Align(
+                        child: DateChip(
+                          date: message.date,
+                          color: const Color.fromARGB(190, 0, 170, 255),
+                        ),
+                      ),
                     ),
-                    floatingHeader: true,
+                    // floatingHeader: true,
                     itemScrollController: controller.scrollController,
                     // ignore: invalid_use_of_protected_member
                     elements: controller.messages.value,
@@ -62,6 +102,7 @@ class ChatScreen extends StatelessWidget {
                 )),
             MessageBar(
               onSend: controller.send,
+              onTextChanged: controller.onTextChanged,
             ),
           ],
         ),

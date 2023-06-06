@@ -7,11 +7,32 @@ class JoinScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final TextEditingController email = TextEditingController();
+    final TextEditingController to = TextEditingController();
+    // String to = '';
     return Scaffold(
-      body: Center(
-        child: TextField(onSubmitted: (value) {
-          Get.toNamed(Routes.chat, arguments: {'email': value});
-        }),
+      body: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: email,
+              decoration: const InputDecoration(hintText: 'from'),
+            ),
+            TextField(
+              controller: to,
+              decoration: const InputDecoration(hintText: 'to'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Get.toNamed(Routes.chat,
+                    arguments: {'email': email.text, 'to': to.text});
+              },
+              child: const Text('Join'),
+            )
+          ],
+        ),
       ),
     );
   }

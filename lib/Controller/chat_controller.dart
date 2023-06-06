@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -12,8 +14,11 @@ class ChatController extends GetxController {
   late SocketInit si;
   final RxList<Message> messages = <Message>[].obs;
   final String email = Get.arguments['email'];
+  final String to = Get.arguments['to'];
+  RxBool isOnline = false.obs;
+  RxBool isTyping = false.obs;
 
-  final TextEditingController controller = TextEditingController();
+  // final TextEditingController controller = TextEditingController();
   final ItemPositionsListener itemPositionsListener =
       ItemPositionsListener.create();
   final GroupedItemScrollController scrollController =
@@ -24,6 +29,8 @@ class ChatController extends GetxController {
 
   final RxBool _show = false.obs;
   RxBool get show => _show;
+
+  Timer? timer;
 
   @override
   void onReady() {
@@ -44,7 +51,7 @@ class ChatController extends GetxController {
               text:
                   'LOoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text',
               type: MessageType.text,
-              date: DateTime.now(),
+              date: DateTime(2023, 2, 9),
               state: MessageState.read,
             ));
     messages.addAll(list);
@@ -54,18 +61,16 @@ class ChatController extends GetxController {
 
   @override
   void onClose() {
-    controller.dispose();
+    // controller.dispose();
     si.socket?.emit('offline', {'email': email});
+    if (timer != null) {
+      timer?.cancel();
+    }
     si.disconnect();
     super.onClose();
   }
 
   void _showArrow() {
-    // final double maxPosition = scrollController.position.maxScrollExtent;
-    // final double currentPosition = scrollController.position.pixels;
-    // debugPrint(
-    //     '${itemPositionsListener.itemPositions.value.last.index ~/ 2} ${messages.indexOf(messages.last)}');
-    // debugPrint('${itemPositionsListener.itemPositions.value.last.index}');
     if (itemPositionsListener.itemPositions.value.last.index ~/ 2 <
         messages.indexOf(messages.last)) {
       _show.value = true;
@@ -77,9 +82,29 @@ class ChatController extends GetxController {
 
   void _initConnection() {
     si = SocketInit(Links.base);
-    si.socket?.connect();
+    si.connect();
     si.socket?.emit('connected', {'email': email});
     si.socket?.emit('online', {'email': email});
+    si.socket?.on('online', (data) {
+      if (data['email'] == to) {
+        isOnline.value = true;
+      }
+    });
+    si.socket?.on('offline', (data) {
+      if (data['email'] == to) {
+        isOnline.value = false;
+      }
+    });
+    si.socket?.on('typing', (data) {
+      if (data['to'] == email) {
+        isTyping.value = true;
+      }
+    });
+    si.socket?.on('stop-typing', (data) {
+      if (data['to'] == email) {
+        isTyping.value = false;
+      }
+    });
     si.socket?.on('message', (data) {
       final Message message = Message(
         id: '',
@@ -113,19 +138,34 @@ class ChatController extends GetxController {
       id: '',
       chatId: '',
       from: email,
-      to: controller.text,
+      to: to,
       text: text,
       type: MessageType.text,
       date: DateTime.now(),
       state: MessageState.waiting,
     );
     messages.add(message);
+    si.socket?.emit('stop-typing', {'to': to});
+    if (timer != null) {
+      timer?.cancel();
+    }
     si.socket?.emit('message', {
       'from': email,
-      'to': controller.text,
+      'to': to,
       'text': text,
       'createdAt': message.date.toIso8601String()
     });
     animateToLast();
+  }
+
+  void onTextChanged(String text) {
+    if (timer != null) {
+      timer?.cancel();
+    }
+    si.socket?.emit('typing', {'to': to});
+    // await Future.delayed(const Duration(seconds: 1));
+    timer = Timer(const Duration(seconds: 1), () {
+      si.socket?.emit('stop-typing', {'to': to});
+    });
   }
 }
