@@ -8,6 +8,9 @@ class CustomTextFormField extends StatelessWidget {
   final String? Function(String?)? validator;
   final TextEditingController? controller;
   final TextInputType? keyboardType;
+  final bool readOnly;
+  final void Function()? onTap;
+  final int? maxLength;
   const CustomTextFormField({
     Key? key,
     this.hintText,
@@ -18,6 +21,9 @@ class CustomTextFormField extends StatelessWidget {
     this.obsecure = false,
     this.controller,
     this.keyboardType,
+    this.readOnly = false,
+    this.onTap,
+    this.maxLength,
   }) : super(key: key);
 
   @override
@@ -27,6 +33,9 @@ class CustomTextFormField extends StatelessWidget {
       obscureText: obsecure,
       keyboardType: keyboardType,
       controller: controller,
+      readOnly: readOnly,
+      onTap: onTap,
+      maxLength: maxLength,
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: const TextStyle(color: Colors.grey),

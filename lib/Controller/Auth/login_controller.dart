@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ionicons/ionicons.dart';
+import 'package:talk_app/Core/Routes/routes.dart';
 
 class LoginController extends GetxController {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -14,7 +15,7 @@ class LoginController extends GetxController {
 
   String? emailValidator(String? value) {
     if (value!.isEmpty) return 'Write your email';
-    if (!value.isEmail) return 'Invalid Email';
+    if (!value.isEmail && !value.isPhoneNumber) return 'Invalid Email';
     return null;
   }
 
@@ -44,7 +45,9 @@ class LoginController extends GetxController {
     }
   }
 
-  void toSignUp() {}
+  void toSignUp() {
+    Get.offNamed(Routes.signup);
+  }
 
   void googleSignIn() {}
   void facebookSignIn() {}

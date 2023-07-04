@@ -13,21 +13,23 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<LoginController>(builder: (controller) {
-      return Scaffold(
-        body: Form(
-          key: controller.formKey,
-          child: OrientationWidget(
-            portrait: _Portrait(
-              controller: controller,
-            ),
-            landscape: _Landscape(
-              controller: controller,
+    return GetBuilder<LoginController>(
+      builder: (controller) {
+        return Scaffold(
+          body: Form(
+            key: controller.formKey,
+            child: OrientationWidget(
+              portrait: _Portrait(
+                controller: controller,
+              ),
+              landscape: _Landscape(
+                controller: controller,
+              ),
             ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }
 
@@ -64,14 +66,14 @@ class _Portrait extends StatelessWidget {
           height: 16,
         ),
         const Text(
-          'Connect your friends all over the world!',
+          'Connect your friends all over the world!\nExpress yourself',
           style: TextStyle(
             color: Colors.grey,
             fontSize: 20,
           ),
         ),
         const SizedBox(
-          height: 60,
+          height: 30,
         ),
         CustomTextFormField(
           hintText: 'ex: example@mail.com',
@@ -216,7 +218,7 @@ class _Landscape extends StatelessWidget {
                   height: 16,
                 ),
                 const Text(
-                  'Connect your friends all over the world!',
+                  'Connect your friends all over the world!\nExpress yourself',
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: Colors.grey,
